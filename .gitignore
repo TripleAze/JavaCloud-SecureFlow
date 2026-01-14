@@ -1,0 +1,28 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+*.tfvars
+
+# Maven
+target/
+*.war
+*.jar
+*.class
+
+# SSH Keys & Secrets
+*.pem
+*.key
+secrets/
+
+# Ansible
+*.retry
+.ansible/
+
+# OS/IDE
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.log

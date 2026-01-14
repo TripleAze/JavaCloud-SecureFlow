@@ -1,0 +1,100 @@
+- name: Install Java 17
+  apt:
+    name: openjdk-17-jdk
+    state: present
+    update_cache: yes
+
+- name: Install Maven
+  apt:
+    name: maven
+    state: present
+
+- name: Download Jenkins GPG key
+  apt_key:
+    url: https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+    state: present
+
+- name: Download Jenkins repo
+  apt_repository:
+    repo: "deb https://pkg.jenkins.io/debian-stable binary/"
+    state: present
+    filename: jenkins
+
+- name: Install Jenkins
+  apt:
+    name: jenkins
+    state: present
+    update_cache: yes
+
+- name: Start and enable Jenkins
+  systemd:
+    name: jenkins
+    state: started
+    enabled: yes
+
+- name: Wait for Jenkins to start
+  wait_for:
+    port: 8080
+    delay: 10
+    timeout: 300
+
+- name: Download Jenkins CLI
+  get_url:
+    url: http://localhost:8080/jnlpJars/jenkins-cli.jar
+    dest: /opt/jenkins-cli.jar
+  register: cli_download
+  until: cli_download is success
+  retries: 5
+  delay: 10
+
+- name: Create .ssh directory for jenkins
+  file:
+    path: /var/lib/jenkins/.ssh
+    state: directory
+    owner: jenkins
+    group: jenkins
+    mode: '0700'
+
+- name: Read initial admin password
+  slurp:
+    src: /var/lib/jenkins/secrets/initialAdminPassword
+  register: admin_password_raw
+
+- name: Set admin password fact
+  set_fact:
+    jenkins_admin_password: "{{ admin_password_raw['content'] | b64decode | trim }}"
+
+- name: Install Jenkins plugins via CLI
+  shell: "java -jar /opt/jenkins-cli.jar -s http://localhost:8080/ -auth admin:{{ jenkins_admin_password }} install-plugin {{ item }} -deploy"
+  loop:
+    - github
+    - ssh-credentials
+    - ssh-agent
+    - git
+  register: plugin_install
+  changed_when: "'Installing' in plugin_install.stdout or 'Success' in plugin_install.stdout"
+
+- name: Restart Jenkins
+  systemd:
+    name: jenkins
+    state: restarted
+
+- name: Wait for Jenkins to recover
+  uri:
+    url: "http://localhost:8080/login"
+    status_code: 200, 403
+  register: _result
+  until: _result.status == 200 or _result.status == 403
+  retries: 60
+  delay: 5
+
+- name: Create credentials script from template
+  template:
+    src: add-credentials.groovy.j2
+    dest: /tmp/add-credentials.groovy
+
+- name: Execute Groovy script to add Tomcat SSH credentials
+  shell: "java -jar /opt/jenkins-cli.jar -s http://localhost:8080/ -auth admin:{{ jenkins_admin_password }} groovy = < /tmp/add-credentials.groovy"
+  register: groovy_exec
+  failed_when: "'Error' in groovy_exec.stderr"
+  ignore_errors: yes
