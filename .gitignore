@@ -19,10 +19,3 @@ secrets/
 # Ansible
 *.retry
 .ansible/
-
-# OS/IDE
-.DS_Store
-.vscode/
-.idea/
-*.swp
-*.log
