@@ -31,8 +31,8 @@ pipeline {
             steps {
                 sshagent(['tomcat-ssh-key']) {
                     sh """
-                        scp -o StrictHostKeyChecking=no ${WAR_FILE} ec2-user@${TOMCAT_IP}:/tmp/
-                        ssh -o StrictHostKeyChecking=no ec2-user@${TOMCAT_IP} "sudo mv /tmp/hello-world.war /opt/tomcat/webapps/ && sudo systemctl restart tomcat"
+                        scp -o StrictHostKeyChecking=no ${WAR_FILE} ubuntu@${TOMCAT_IP}:/home/ubuntu/tmp/
+                        ssh -o StrictHostKeyChecking=no ubuntu@${TOMCAT_IP} "sudo mv /home/ubuntu/tmp/hello-world.war /opt/tomcat/webapps/ && sudo systemctl restart tomcat"
                     """
                 }
             }
