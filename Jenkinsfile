@@ -40,7 +40,11 @@ pipeline {
 
         stage('Health Check') {
             steps {
-                sh "curl -f http://${TOMCAT_IP}:8080/hello-world/ || exit 1"
+                echo "Waiting for Tomcat to start..."
+                sleep 15
+                retry(5) {
+                    sh "curl -f http://${TOMCAT_IP}:8080/hello-world/ || (sleep 10 && exit 1)"
+                }
             }
         }
     }
