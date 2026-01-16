@@ -2,7 +2,7 @@
 
 This repository contains a fully automated pipeline for building and deploying a Java Maven web application to Apache Tomcat using Infrastructure as Code (Terraform) and Configuration Management (Ansible).
 
-## 🏗️ Architecture
+## Architecture
 - **Infrastructure**: AWS EC2 Instances (provisioned via Terraform).
 - **CI Server**: Jenkins (running Java 21) - Securely served via Nginx Reverse Proxy (HTTPS).
 - **Application Server**: Apache Tomcat 10.1.50 (running Java 21) - Securely served via Nginx Reverse Proxy (HTTPS).
@@ -13,10 +13,10 @@ This repository contains a fully automated pipeline for building and deploying a
 
 ## Project Evolution & Debugging Log
 
-Building this pipeline involved several complex challenges. Below is a log of the key issues encountered and how they were resolved.
+Building this pipeline involved several complex challenges. Below is a log of the key issues i encountered and how they were resolved.
 
 ### 1. Configuration Management Strategy
-- **Issue**: Initial Terraform code used `user_data` for service installation. This made configuration hard to version and debug.
+- **Issue**: The Initial Terraform code used `user_data` for service installation. This made configuration hard to version and debug.
 - **Solution**: Removed all configuration logic from Terraform. Refactored the project to use **Ansible roles** for a clean separation between "Provisioning" (Terraform) and "Configuration" (Ansible).
 
 ### 2. Jenkins Plugin Authentication Failure
@@ -71,6 +71,8 @@ Building this pipeline involved several complex challenges. Below is a log of th
 ```bash
 cd terraform
 terraform init
+terraform validate
+terraform plan
 terraform apply -auto-approve
 ```
 
@@ -83,7 +85,7 @@ ansible-playbook -i inventories/host.ini site.yml
 
 ### 3. Configure Jenkins UI
 - Create a **New Pipeline Job**.
-- Set the GitHub repo to: `https://github.com/TripleAze/Automated-CI-CD-for-Java-WAR-Deployment-on-Tomcat--AWS-EC2-`
+- Set the GitHub repo to: `https://github.com/TripleAze/JavaCloud-SecureFlow`
 - Set Branch to `*/main`.
 - Point Script Path to `Jenkinsfile`.
 - **Note**: Access Jenkins at `https://abu-jenkins.chickenkiller.com` and Tomcat at `https://abu-java.chickenkiller.com/hello-world/`.
